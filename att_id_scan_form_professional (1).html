@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AT&T Secure ID Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f1f1f6;
+      margin: 0;
+      padding: 0;
+    }
+    .att-header {
+      background-color: #0057b8;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .btn {
+      background-color: #0057b8;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .tab {
+      background: #e1e7f0;
+      padding: 1rem;
+      flex: 1;
+      text-align: center;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .tab:hover {
+      background: #cdd8e9;
+    }
+    .hidden { display: none; }
+    video, canvas {
+      width: 100%;
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+    p.info {
+      font-size: 0.95rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="att-header">
+    <h1>AT&T Secure ID Verification</h1>
+  </div>
+
+  <div class="container" id="consentScreen">
+    <h2>Terms and Consent</h2>
+    <p class="info">To proceed with identity verification, please review and accept the terms below.</p>
+    <div class="checkbox">
+      <input type="checkbox" id="agreeCheckbox" />
+      <label for="agreeCheckbox">I acknowledge and agree to AT&T’s <a href="#">Terms and Conditions</a> for secure identity verification and consent to camera access for ID scanning.</label>
+    </div>
+    <button class="btn" onclick="proceedToIDOptions()">Agree & Continue</button>
+  </div>
+
+  <div class="container hidden" id="idTypeScreen">
+    <h2>Select Your Identification Type</h2>
+    <p class="info">Please choose the type of ID you would like to scan:</p>
+    <div class="tabs">
+      <div class="tab" onclick="selectID('driving')">Driving License</div>
+      <div class="tab" onclick="selectID('state')">State ID</div>
+    </div>
+  </div>
+
+  <div class="container hidden" id="scanSideScreen">
+    <h2>Scan Your <span id="selectedID"></span></h2>
+    <p class="info">Select the side of the ID you wish to scan:</p>
+    <div class="tabs">
+      <div class="tab" onclick="startCamera('front')">Front Side</div>
+      <div class="tab" onclick="startCamera('back')">Back Side</div>
+    </div>
+  </div>
+
+  <div class="container hidden" id="cameraScreen">
+    <h2>Camera Access - <span id="scanSide"></span> of Your <span id="scanID"></span></h2>
+    <p class="info">Please position your ID clearly in front of the camera. Make sure all details are visible.</p>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" class="hidden"></canvas>
+    <button class="btn" onclick="takePhoto()">Capture</button>
+    <button class="btn" onclick="alert('Submit clicked - backend coming soon')">Submit</button>
+  </div>
+
+  <script>
+    function proceedToIDOptions() {
+      if (!document.getElementById('agreeCheckbox').checked) {
+        alert('You must agree to the terms before continuing.');
+        return;
+      }
+      document.getElementById('consentScreen').classList.add('hidden');
+      document.getElementById('idTypeScreen').classList.remove('hidden');
+    }
+
+    let currentID = '';
+    let currentSide = '';
+
+    function selectID(idType) {
+      currentID = idType === 'driving' ? 'Driving License' : 'State ID';
+      document.getElementById('selectedID').textContent = currentID;
+      document.getElementById('idTypeScreen').classList.add('hidden');
+      document.getElementById('scanSideScreen').classList.remove('hidden');
+    }
+
+    async function startCamera(side) {
+      currentSide = side;
+      document.getElementById('scanSide').textContent = side === 'front' ? 'Front Side' : 'Back Side';
+      document.getElementById('scanID').textContent = currentID;
+      document.getElementById('scanSideScreen').classList.add('hidden');
+      document.getElementById('cameraScreen').classList.remove('hidden');
+
+      try {
+        const video = document.getElementById('video');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert('Camera access was denied or is not available. Please allow camera permissions.');
+        console.error('Camera Error:', err);
+      }
+    }
+
+    function takePhoto() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.classList.remove('hidden');
+      video.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
